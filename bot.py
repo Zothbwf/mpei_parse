@@ -69,9 +69,9 @@ async def echo_handler(message: Message) -> None:
                     splitted_msg = msg.split()
                     logging.info(dp['job'])
                     if len(splitted_msg) == 3:
-                        await change_interval(dp["job"], int(splitted_msg[2]))
+                        interval = await change_interval(dp["job"], int(splitted_msg[2]))
                         await message.answer(
-                            "Все заебок",
+                            f"Установлен интервал {interval} мин",
                         )
                 except Exception as e:
                     logging.critical(e)
@@ -100,9 +100,10 @@ async def setup_scheduler():
 
 
 async def change_interval(job, interval):
+    interval = max(0.5,interval)
     job.reschedule("interval", minutes=interval)
     job.modify(next_run_time=datetime.datetime.now())
-
+    return interval
 
 async def main() -> None:
     # Initialize Bot instance with default bot properties which will be passed to all API calls
