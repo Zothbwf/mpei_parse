@@ -70,7 +70,7 @@ async def echo_handler(message: Message) -> None:
                     logging.info(dp['job'])
                     if len(splitted_msg) == 3:
                         await change_interval(dp["job"], int(splitted_msg[2]))
-                        message.answer(
+                        await message.answer(
                             "Все заебок",
                         )
                 except Exception as e:
