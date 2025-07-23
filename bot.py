@@ -67,9 +67,11 @@ async def echo_handler(message: Message) -> None:
             elif "изменить интервал" in msg and message.from_user.id in admins:
                 try:
                     splitted_msg = msg.split()
-                    logging.info(dp['job'])
+                    logging.info(dp["job"])
                     if len(splitted_msg) == 3:
-                        interval = await change_interval(dp["job"], int(splitted_msg[2]))
+                        interval = await change_interval(
+                            dp["job"], int(splitted_msg[2])
+                        )
                         await message.answer(
                             f"Установлен интервал {interval} мин",
                         )
@@ -100,17 +102,18 @@ async def setup_scheduler():
 
 
 async def change_interval(job, interval):
-    interval = max(0.5,interval)
+    interval = max(0.5, interval)
     job.reschedule("interval", minutes=interval)
     job.modify(next_run_time=datetime.datetime.now())
     return interval
+
 
 async def main() -> None:
     # Initialize Bot instance with default bot properties which will be passed to all API calls
     bot = Bot(token=token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     job = await setup_scheduler()
     dp["job"] = job
-    
+
     # And the run events dispatching
     await dp.start_polling(bot)
 
