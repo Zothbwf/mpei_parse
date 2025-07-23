@@ -62,7 +62,7 @@ async def echo_handler(message: Message) -> None:
                     f"{output}", reply_to_message_id=message.message_id
                 )
             else:
-                await message.answer("Воспользуйтесь кнопками снизу")
+                await message.answer("Воспользуйтесь кнопками снизу",reply_markup=main_kb(message.from_user.id))
 
     except Exception as e:
         logging.error(e)
@@ -89,7 +89,11 @@ async def main() -> None:
     # And the run events dispatching
     await dp.start_polling(bot)
 
-
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
-    asyncio.run(main())
+    logging.basicConfig(level=logging.INFO,handlers=[logging.FileHandler('my.log',encoding='UTF-8'), logging.StreamHandler()],
+    format="%(asctime)s %(levelname)s %(message)s")
+    
+    try:   
+        asyncio.run(main())
+    except Exception as e:
+        logging.critical(e)

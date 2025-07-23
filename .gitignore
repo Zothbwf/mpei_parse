@@ -3,3 +3,4 @@ venv/
 data.json
 .idea/
 __pycache__/
+*.log
