@@ -50,15 +50,7 @@ async def echo_handler(message: Message) -> None:
     try:
         if message.from_user.id in allowed_ids:
             msg = message.text.lower()
-            if msg == "обновить и получить":
-                await message.answer(f"Начал работу, пожалуйста подождите")
-                data = await get_places(urls, ids)
-                update_data_file(data)
-                output = user_friendly_data(data)
-                await message.answer(
-                    f"{output}", reply_to_message_id=message.message_id
-                )
-            elif msg == "получить последнее":
+            if msg == "получить последнее":
                 data = get_data_file()
                 output = user_friendly_data(data)
                 await message.answer(
@@ -96,7 +88,7 @@ async def data_updater():
 async def setup_scheduler():
     scheduler = AsyncIOScheduler()
 
-    job = scheduler.add_job(data_updater, "interval", minutes=30)
+    job = scheduler.add_job(data_updater, "interval", minutes=0.5)
     scheduler.start()
     return job
 

@@ -6,9 +6,6 @@ def main_kb(user_telegram_id: int):
         [
             KeyboardButton(text="Получить последнее"),
         ],
-        [
-            KeyboardButton(text="Обновить и получить"),
-        ],
     ]
 
     keyboard = ReplyKeyboardMarkup(
