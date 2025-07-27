@@ -4,19 +4,17 @@ from bs4 import BeautifulSoup
 import json
 
 
-def check_tipa(priority, sogl, ebanatishe, mode):
-    if ebanatishe:
-        return False
+def check_tipa(priority, sogl, true_priority, mode):
     if mode == 1:  # Все кроме забравших
         return True
     if mode == 2:  # Приоритет 1,2
         return priority <= 2
-    if mode == 3:  # Приоритет 1,2 + согласие
-        return priority <= 2 and sogl
+    if mode == 3:  # Проходной приоритет + согласие
+        return true_priority and sogl
 
 
 def get_place(url, ids):
-    req_url = f"https://pk.mpei.ru/info/entrants_list{url}.html"
+    req_url = f"https://pk.mpei.ru/inform/list{url}.html"
     ans = requests.get(req_url)
     if ans.status_code == 200:
         soup = BeautifulSoup(ans.text, "html.parser")
@@ -35,16 +33,16 @@ def get_place(url, ids):
         id = pars[0]
         sogl = pars[-6] == "да"
         priority = int(pars[-5])
-        ebanatishe = "Забрал документы" in pars[-1]
+        true_priority = pars[-3] == "да"
         if id in ids:
             norm[ids[id]] = (i1, i2, i3)
             if len(norm) == 2:
                 return norm
-        if check_tipa(priority, sogl, ebanatishe, 1):
+        if check_tipa(priority, sogl, true_priority, 1):
             i1 += 1
-        if check_tipa(priority, sogl, ebanatishe, 2):
+        if check_tipa(priority, sogl, true_priority, 2):
             i2 += 1
-        if check_tipa(priority, sogl, ebanatishe, 3):
+        if check_tipa(priority, sogl, true_priority, 3):
             i3 += 1
     return norm
 
@@ -94,12 +92,13 @@ def get_data_file():
 
 
 def main():
-    urls = {"581": "ПМИ", "1986": "ФИ", "14": "ИВТ", "35": "ПИ"}
+    urls = {"581bacc": "ПМИ", "1986bacc": "ФИ", "14bacc": "ИВТ", "35bacwe": "ПИ"}
     ids = {"3844150": "Илья", "4216913": "Дима"}
-    # data = get_places(urls, ids)
-    # output = user_friendly_data(data)
-    # print(output, type(output))
-    # update_data_file(data)
+
+    data = get_places(urls, ids)
+    output = user_friendly_data(data)
+    print(output, type(output))
+    update_data_file(data)
     print(get_data_file())
 
 
