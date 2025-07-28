@@ -10,7 +10,7 @@ from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 from dotenv import load_dotenv
 import json
-from svo import get_places, user_friendly_data, get_data_file, update_data_file
+from main import get_places, user_friendly_data, get_data_file, update_data_file
 from kb import main_kb
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import datetime

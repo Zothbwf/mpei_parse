@@ -1,7 +1,8 @@
 import datetime
-import requests
+import aiohttp
 from bs4 import BeautifulSoup
 import json
+import asyncio
 
 
 def check_tipa(priority, sogl, true_priority, mode):
@@ -13,13 +14,18 @@ def check_tipa(priority, sogl, true_priority, mode):
         return true_priority and sogl
 
 
-def get_place(url, ids):
+async def get_place(session, url, ids):
     req_url = f"https://pk.mpei.ru/inform/list{url}.html"
-    ans = requests.get(req_url)
-    if ans.status_code == 200:
-        soup = BeautifulSoup(ans.text, "html.parser")
-    else:
-        return "Something went wrong ebana"
+    try:
+        async with session.get(req_url) as response:
+            if response.status == 200:
+                html = await response.text()
+                soup = BeautifulSoup(html, "html.parser")
+            else:
+                return "Something went wrong ebana"
+    except Exception:
+        return "Error occurred"
+
     i1 = 1
     i2 = 1
     i3 = 1
@@ -28,11 +34,19 @@ def get_place(url, ids):
     lines = []
     for table in tables:
         lines.extend([tr for tr in table.find_all("tr") if tr.parent.name != "thead"])
+
     for line in lines:
         pars = [item.text for item in line.find_all("td")]
         id = pars[0]
         sogl = pars[-6] == "да"
         priority = int(pars[-5])
+        true_priority = pars[-3] == "да"
+
+        if id in ids:
+            norm[ids[id]] = (i1, i2, i3)
+            if len(norm) == len(ids.keys()):
+                return norm
+
         true_priority = pars[-3] == "да"
         if id in ids:
             norm[ids[id]] = (i1, i2, i3)
@@ -44,13 +58,21 @@ def get_place(url, ids):
             i2 += 1
         if check_tipa(priority, sogl, true_priority, 3):
             i3 += 1
+
     return norm
 
 
-def get_places(urls, ids):
+async def get_places(urls, ids):
     places = {}
-    for url, name in urls.items():
-        places[name] = get_place(url, ids)
+    async with aiohttp.ClientSession() as session:
+        tasks = []
+        for url, name in urls.items():
+            task = get_place(session, url, ids)
+            tasks.append((name, task))
+
+        for name, task in tasks:
+            places[name] = await task
+
     good_data = make_data_good(places)
     time = datetime.datetime.now()
     good_data["time"] = time
@@ -91,11 +113,10 @@ def get_data_file():
     return data
 
 
-def main():
+async def main():
     urls = {"581bacc": "ПМИ", "1986bacc": "ФИ", "14bacc": "ИВТ", "35bacwe": "ПИ"}
     ids = {"3844150": "Илья", "4216913": "Дима"}
-
-    data = get_places(urls, ids)
+    data = await get_places(urls, ids)
     output = user_friendly_data(data)
     print(output, type(output))
     update_data_file(data)
@@ -103,4 +124,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
