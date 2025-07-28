@@ -18,7 +18,7 @@ import datetime
 load_dotenv()
 token = environ.get("token")
 allowed_ids = json.loads(environ.get("allowed_ids"))
-admins = allowed_ids = json.loads(environ.get("admins"))
+admins = json.loads(environ.get("admins"))
 urls = json.loads(environ.get("urls"))
 ids = json.loads(environ.get("ids"))
 dp = Dispatcher()
