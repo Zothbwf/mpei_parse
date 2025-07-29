@@ -32,24 +32,22 @@ async def get_place_mpei(session, url, ids):
     norm = {}
     tables = soup.find_all("table")
     lines = []
+    number_of_vacancies = (
+        soup.find("div", {"class": "title1"}).get_text("@").split("@")[2]
+    )
+    number_of_vacancies = int(
+        "".join([i for i in number_of_vacancies if i.isnumeric()])
+    )
     for table in tables:
         lines.extend([tr for tr in table.find_all("tr") if tr.parent.name != "thead"])
-
     for line in lines:
         pars = [item.text for item in line.find_all("td")]
         id = pars[0]
         sogl = pars[-6] == "да"
         priority = int(pars[-5])
         true_priority = pars[-3] == "да"
-
         if id in ids:
-            norm[ids[id]] = (i1, i2, i3)
-            if len(norm) == len(ids.keys()):
-                return norm
-
-        true_priority = pars[-3] == "да"
-        if id in ids:
-            norm[ids[id]] = (i1, i2, i3)
+            norm[ids[id]] = (i1, i2, i3, number_of_vacancies)
             if len(norm) == len(ids):
                 return norm
         if check_tipa(priority, sogl, true_priority, 1):
@@ -93,6 +91,10 @@ async def get_place_mgsu(session, url, ids):
     lines = soup.find_all("tr", {"class": "data-row"})
     i1, i2, i3 = 1, 1, 1
     norm = {}
+    number_of_vacancies = soup.find_all("tr", {"class": "info-row"})[2].text
+    number_of_vacancies = int(
+        "".join([i for i in number_of_vacancies if i.isnumeric()])
+    )
     for line in lines:
         pars = [item.text for item in line.find_all("td")]
         id_ = pars[1]
@@ -100,7 +102,7 @@ async def get_place_mgsu(session, url, ids):
         priority = int(pars[-8])
         true_priority = pars[-4] == "✓"
         if id_ in ids:
-            norm[ids[id_]] = (i1, i2, i3)
+            norm[ids[id_]] = (i1, i2, i3, number_of_vacancies)
             if len(norm) == len(ids):
                 return norm
         if check_tipa(priority, sogl, true_priority, 1):
@@ -145,7 +147,7 @@ def user_friendly_data(data):
         if name != "time":
             output += f"{name}\n"
             for faculty, values in data[name].items():
-                output += f"    {faculty}: {values}\n"
+                output += f"    {faculty}: {values[:-1]} из {values[-1]}\n"
     time = data["time"].strftime("%d.%m.%Y %H:%M")
     output += f"\nИнформация последний раз обновлялась: {time}"
     return output
@@ -164,13 +166,13 @@ def get_data_file():
 
 
 async def main():
-    # urls = {"581bacc": "ПМИ", "1986bacc": "ФИ", "14bacc": "ИВТ", "35bacwe": "ПИ"}
-    # ids = {"3844150": "Илья", "4216913": "Дима"}
-    # data = await get_places(urls, ids)
-    # output = user_friendly_data(data)
-    # print(output, type(output))
-    # update_data_file(data)
-    # print(get_data_file())
+    urls = {"581bacc": "ПМИ", "1986bacc": "ФИ", "14bacc": "ИВТ", "35bacwe": "ПИ"}
+    ids = {"3844150": "Илья", "4216913": "Дима"}
+    data = await get_places_mpei(urls, ids)
+    output = user_friendly_data(data)
+    print(output, type(output))
+    update_data_file(data)
+    print(get_data_file())
     urls = {
         "p=000000012_08.03.01_Stroitelstvo_Ochnaya_Byudzhet_Obshchiy%20konkurs.html": "Строительство",
         "p=000000012_23.05.01_Nazemnye_transportno-tekhnologicheskie_sredstva_Ochnaya_Byudzhet_Obshchiy%20konkurs.html": "Наземные транспортно-технологические средства",
