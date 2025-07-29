@@ -10,17 +10,35 @@ from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 from dotenv import load_dotenv
 import json
-from main import get_places, user_friendly_data, get_data_file, update_data_file
+from main import (
+    get_places_mgsu,
+    get_places_mpei,
+    user_friendly_data,
+    get_data_file,
+    update_data_file,
+)
 from kb import main_kb
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import datetime
 
 load_dotenv()
+
+
+def load_config(key, default=None):
+    value = environ.get(key)
+    try:
+        return json.loads(value) if value is not None else default
+    except json.JSONDecodeError as e:
+        return default
+
+
 token = environ.get("token")
-allowed_ids = json.loads(environ.get("allowed_ids"))
-admins = json.loads(environ.get("admins"))
-urls = json.loads(environ.get("urls"))
-ids = json.loads(environ.get("ids"))
+allowed_ids = load_config("allowed_ids")
+admins = load_config("admins")
+urls_mpei = load_config("urls_mpei")
+ids_mpei = load_config("ids_mpei")
+urls_mgsu = load_config("urls_mgsu")
+ids_mgsu = load_config("ids_mgsu")
 dp = Dispatcher()
 
 
@@ -81,7 +99,11 @@ async def echo_handler(message: Message) -> None:
 
 
 async def data_updater():
-    data = await get_places(urls, ids)
+    if urls_mpei and ids_mpei:
+        data_mpei = await get_places_mpei(urls_mpei, ids_mpei)
+    if urls_mgsu and ids_mgsu:
+        data_mgsu = await get_places_mgsu(urls_mgsu, ids_mgsu)
+    data = {**data_mpei, **data_mgsu}
     update_data_file(data)
 
 
@@ -105,6 +127,7 @@ async def main() -> None:
     bot = Bot(token=token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     job = await setup_scheduler()
     dp["job"] = job
+    job.modify(next_run_time=datetime.datetime.now())
 
     # And the run events dispatching
     await dp.start_polling(bot)
