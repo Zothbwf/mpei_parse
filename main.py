@@ -98,9 +98,9 @@ async def get_place_mgsu(session, url, ids):
     for line in lines:
         pars = [item.text for item in line.find_all("td")]
         id_ = pars[1]
-        sogl = pars[-9] == "✓"
-        priority = int(pars[-8])
-        true_priority = pars[-4] == "✓"
+        sogl = pars[3] == "✓"
+        priority = int(pars[2])
+        true_priority = pars[5] == "✓"
         if id_ in ids:
             norm[ids[id_]] = (i1, i2, i3, number_of_vacancies)
             if len(norm) == len(ids):
